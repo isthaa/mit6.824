@@ -10,6 +10,7 @@ import (
 
 //
 // Common RPC request/reply definitions
+// 常见的RPC请求/应答定义
 //
 
 type PutArgs struct {

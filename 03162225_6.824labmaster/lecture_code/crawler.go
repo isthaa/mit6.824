@@ -7,11 +7,13 @@ import (
 
 //
 // Several solutions to the crawler exercise from the Go tutorial
+// Go教程中爬虫练习的几个解决方案
 // https://tour.golang.org/concurrency/10
 //
 
 //
 // Serial crawler
+// 串行爬虫
 //
 
 func Serial(url string, fetcher Fetcher, fetched map[string]bool) {
@@ -31,6 +33,7 @@ func Serial(url string, fetcher Fetcher, fetched map[string]bool) {
 
 //
 // Concurrent crawler with shared state and Mutex
+// 具有共享状态和互斥的并发爬虫
 //
 
 type fetchState struct {
@@ -72,6 +75,7 @@ func makeState() *fetchState {
 
 //
 // Concurrent crawler with channels
+// 带有通道的并发爬虫
 //
 
 func worker(url string, ch chan []string, fetcher Fetcher) {
@@ -130,10 +134,12 @@ func main() {
 
 type Fetcher interface {
 	// Fetch returns a slice of URLs found on the page.
+	// Fetch返回在页面上找到的url片段
 	Fetch(url string) (urls []string, err error)
 }
 
 // fakeFetcher is Fetcher that returns canned results.
+// fakeFetcher是返回罐装结果的Fetcher
 type fakeFetcher map[string]*fakeResult
 
 type fakeResult struct {
@@ -151,6 +157,7 @@ func (f fakeFetcher) Fetch(url string) ([]string, error) {
 }
 
 // fetcher is a populated fakeFetcher.
+// fetcher是一个被填充的fakeFetcher
 var fetcher = fakeFetcher{
 	"http://golang.org/": &fakeResult{
 		"The Go Programming Language",

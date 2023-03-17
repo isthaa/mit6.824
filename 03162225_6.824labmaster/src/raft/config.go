@@ -4,10 +4,10 @@ package raft
 // support for Raft tester.
 //
 // we will use the original config.go to test your code for grading.
-// so, while you can modify this code to help you debug, please
-// test with the original before submitting.
-//
+// so, while you can modify this code to help you debug, please test with the original before submitting.
 
+//我们将使用原始的配置。去测试你的代码以进行评分。
+//所以，虽然你可以修改这段代码来帮助你调试，但请在提交之前先测试原始代码。
 import (
 	"bytes"
 	"log"
@@ -48,17 +48,17 @@ type config struct {
 	net         *labrpc.Network
 	n           int
 	rafts       []*Raft
-	applyErr    []string // from apply channel readers
-	connected   []bool   // whether each server is on the net
+	applyErr    []string // from apply channel readers 从应用通道阅读器
+	connected   []bool   // whether each server is on the net 每个服务器是否都在网络上
 	saved       []*Persister
-	endnames    [][]string            // the port file names each sends to
-	logs        []map[int]interface{} // copy of each server's committed entries
+	endnames    [][]string            // the port file names each sends to 每个发送到的端口文件名
+	logs        []map[int]interface{} // copy of each server's committed entries 每个服务器提交的条目的副本
 	lastApplied []int
-	start       time.Time // time at which make_config() was called
-	// begin()/end() statistics
-	t0        time.Time // time at which test_test.go called cfg.begin()
-	rpcs0     int       // rpcTotal() at start of test
-	cmds0     int       // number of agreements
+	start       time.Time // time at which make_config() was called 调用make_config()的时间
+	// begin()/end() statistics 统计数据
+	t0        time.Time // time at which test_test.go called cfg.begin() test_test.go调用cfg.begin()的时间
+	rpcs0     int       // rpcTotal() at start of test rpcTotal()在测试开始
+	cmds0     int       // number of agreements 协议数量
 	bytes0    int64
 	maxIndex  int
 	maxIndex0 int
@@ -95,7 +95,7 @@ func make_config(t *testing.T, n int, unreliable bool, snapshot bool) *config {
 	if snapshot {
 		applier = cfg.applierSnap
 	}
-	// create a full set of Rafts.
+	// create a full set of Rafts. 创造一整套Raft
 	for i := 0; i < cfg.n; i++ {
 		cfg.logs[i] = map[int]interface{}{}
 		cfg.start1(i, applier)
@@ -109,18 +109,19 @@ func make_config(t *testing.T, n int, unreliable bool, snapshot bool) *config {
 	return cfg
 }
 
-// shut down a Raft server but save its persistent state.
+// shut down a Raft server but save its persistent state. 关闭一个Raft服务器，但保存它的持久状态
 func (cfg *config) crash1(i int) {
 	cfg.disconnect(i)
-	cfg.net.DeleteServer(i) // disable client connections to the server.
+	cfg.net.DeleteServer(i) // disable client connections to the server. 禁用客户端到服务器的连接
 
 	cfg.mu.Lock()
 	defer cfg.mu.Unlock()
 
-	// a fresh persister, in case old instance
-	// continues to update the Persister.
-	// but copy old persister's content so that we always
-	// pass Make() the last persisted state.
+	// a fresh persister, in case old instance continues to update the Persister.
+	// but copy old persister's content so that we always pass Make() the last persisted state.
+
+	//一个新的persister，以防旧实例继续更新persister。
+	//但复制旧持久化的内容，以便始终传递Make()最后的持久化状态。
 	if cfg.saved[i] != nil {
 		cfg.saved[i] = cfg.saved[i].Copy()
 	}
@@ -148,6 +149,7 @@ func (cfg *config) checkLogs(i int, m ApplyMsg) (string, bool) {
 		if old, oldok := cfg.logs[j][m.CommandIndex]; oldok && old != v {
 			log.Printf("%v: log %v; server %v\n", i, cfg.logs[i], cfg.logs[j])
 			// some server has already committed a different value for this entry!
+			// 某些服务器已经为这个条目提交了不同的值!
 			err_msg = fmt.Sprintf("commit index=%v server=%v %v != server=%v %v",
 				m.CommandIndex, i, m.Command, j, old)
 		}
@@ -160,12 +162,13 @@ func (cfg *config) checkLogs(i int, m ApplyMsg) (string, bool) {
 	return err_msg, prevok
 }
 
-// applier reads message from apply ch and checks that they match the log
-// contents
+// applier reads message from apply ch and checks that they match the log contents
+// applier从apply ch读取消息并检查它们是否匹配日志内容
 func (cfg *config) applier(i int, applyCh chan ApplyMsg) {
 	for m := range applyCh {
 		if m.CommandValid == false {
 			// ignore other types of ApplyMsg
+			// 忽略其他类型的ApplyMsg
 		} else {
 			cfg.mu.Lock()
 			err_msg, prevok := cfg.checkLogs(i, m)
@@ -176,8 +179,8 @@ func (cfg *config) applier(i int, applyCh chan ApplyMsg) {
 			if err_msg != "" {
 				log.Fatalf("apply error: %v", err_msg)
 				cfg.applyErr[i] = err_msg
-				// keep reading after error so that Raft doesn't block
-				// holding locks...
+				// keep reading after error so that Raft doesn't block holding locks...
+				// 在错误后继续读取，这样Raft就不会阻塞持有锁…
 			}
 		}
 	}
@@ -213,6 +216,7 @@ func (cfg *config) ingestSnap(i int, snapshot []byte, index int) string {
 const SnapShotInterval = 10
 
 // periodically snapshot raft state
+// 定时快照Raft状态
 func (cfg *config) applierSnap(i int, applyCh chan ApplyMsg) {
 	cfg.mu.Lock()
 	rf := cfg.rafts[i]
@@ -265,30 +269,33 @@ func (cfg *config) applierSnap(i int, applyCh chan ApplyMsg) {
 		if err_msg != "" {
 			log.Fatalf("apply error: %v", err_msg)
 			cfg.applyErr[i] = err_msg
-			// keep reading after error so that Raft doesn't block
-			// holding locks...
+			// keep reading after error so that Raft doesn't block holding locks...
+			// 在错误后继续读取，这样Raft就不会阻塞持有锁…
 		}
 	}
 }
 
-//
 // start or re-start a Raft.
 // if one already exists, "kill" it first.
-// allocate new outgoing port file names, and a new
-// state persister, to isolate previous instance of
-// this server. since we cannot really kill it.
-//
+// allocate new outgoing port file names, and a new state persister, to isolate previous instance of this server. since we cannot really kill it.
+
+//启动或重新启动一个Raft。
+//如果已经存在，先“kill”它。
+//分配新的外发端口文件名和一个新的状态持久化，以隔离此服务器的前一个实例。因为我们不能杀死它。
 func (cfg *config) start1(i int, applier func(int, chan ApplyMsg)) {
 	cfg.crash1(i)
 
 	// a fresh set of outgoing ClientEnd names.
 	// so that old crashed instance's ClientEnds can't send.
+	//一个新的客户端名称集合。
+	//这样旧的崩溃实例的客户端就不能发送了。
 	cfg.endnames[i] = make([]string, cfg.n)
 	for j := 0; j < cfg.n; j++ {
 		cfg.endnames[i][j] = randstring(20)
 	}
 
 	// a fresh set of ClientEnds.
+	// 一组新的客户端
 	ends := make([]*labrpc.ClientEnd, cfg.n)
 	for j := 0; j < cfg.n; j++ {
 		ends[j] = cfg.net.MakeEnd(cfg.endnames[i][j])
